@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { TrackClick, TrackSectionView } from "@/components/analytics-events";
+import { NewsletterSignupForm } from "@/components/newsletter-signup-form";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
 
 const playerPaths = [
@@ -470,6 +471,7 @@ function Signup() {
             Get demo drops, build notes, and early racer updates from inside the
             habitat.
           </h2>
+          <NewsletterSignupForm />
         </div>
       </div>
     </section>

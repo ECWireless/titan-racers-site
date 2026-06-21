@@ -56,7 +56,7 @@ Definition of done:
 
 ## PR 3: Titan-Specific Subscribe Flow
 
-Status: planned
+Status: implemented locally
 
 Scope:
 - Add email-only newsletter form.
@@ -79,9 +79,9 @@ Analytics events:
 - `confirmation_error`
 
 Definition of done:
-- Email submission is wired to the agreed shared contract, with any live confirmation-email/database verification explicitly deferred to Forge PR 1 and Titan PR 4 if the shared migration is not live yet.
+- Email submission is wired to the agreed shared contract through the deployed Forge subscribe API.
 - Invalid email and failed states are clear and non-leaky.
-- Confirmation page confirms without a second button click.
+- Confirmation links land on Titan Racers and confirm through the shared Forge token API without a second button click.
 - No email or personal data is sent to analytics.
 
 ## PR 4: QA + Launch Prep
