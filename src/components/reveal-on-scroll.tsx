@@ -1,20 +1,27 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
+
+const useIsomorphicLayoutEffect =
+  typeof window === "undefined" ? useEffect : useLayoutEffect;
 
 export function RevealOnScroll() {
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     const root = document.documentElement;
-    root.classList.add("motion-ready");
-
     const animatedElements = Array.from(
       document.querySelectorAll<HTMLElement>("[data-reveal]"),
     );
 
-    if (!("IntersectionObserver" in window)) {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (prefersReducedMotion || !("IntersectionObserver" in window)) {
       animatedElements.forEach((element) => element.classList.add("is-visible"));
-      return () => root.classList.remove("motion-ready");
+      return undefined;
     }
+
+    root.classList.add("motion-ready");
 
     const observer = new IntersectionObserver(
       (entries) => {

@@ -46,6 +46,12 @@ export function TrackSectionView({
       return;
     }
 
+    if (!("IntersectionObserver" in window)) {
+      hasTrackedRef.current = true;
+      track(eventName, properties);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting && !hasTrackedRef.current) {
