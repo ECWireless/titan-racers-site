@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+:root {
+  --titan-black: #070706;
+  --titan-panel: #14120f;
+  --titan-ice: #f7f2e8;
+  --titan-muted: #b8afa1;
+  --titan-orange: #ff7a18;
+  --titan-hazard: #ffbd59;
+  --titan-steel: #34404a;
+}
+
+@theme inline {
+  --color-titan-black: var(--titan-black);
+  --color-titan-panel: var(--titan-panel);
+  --color-titan-ice: var(--titan-ice);
+  --color-titan-muted: var(--titan-muted);
+  --color-titan-orange: var(--titan-orange);
+  --color-titan-hazard: var(--titan-hazard);
+  --color-titan-steel: var(--titan-steel);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--titan-black);
+  color: var(--titan-ice);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background: var(--titan-black);
+  color: var(--titan-ice);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+::selection {
+  background: var(--titan-orange);
+  color: var(--titan-black);
+}
