@@ -34,7 +34,7 @@ Definition of done:
 
 ## PR 2: Homepage Narrative And Visual System
 
-Status: planned
+Status: implemented locally
 
 Scope:
 - Build the compressed homepage flow from the concept doc and deck.
