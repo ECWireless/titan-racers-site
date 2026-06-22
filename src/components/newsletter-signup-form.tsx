@@ -12,15 +12,36 @@ export function NewsletterSignupForm() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<FormStatus>("idle");
+  const formRef = useRef<HTMLFormElement | null>(null);
   const hasTrackedViewRef = useRef(false);
 
   useEffect(() => {
-    if (hasTrackedViewRef.current) {
+    const form = formRef.current;
+
+    if (!form || hasTrackedViewRef.current) {
       return;
     }
 
-    hasTrackedViewRef.current = true;
-    track("newsletter_form_view", { location: "updates_section" });
+    if (!("IntersectionObserver" in window)) {
+      hasTrackedViewRef.current = true;
+      track("newsletter_form_view", { location: "updates_section" });
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !hasTrackedViewRef.current) {
+          hasTrackedViewRef.current = true;
+          track("newsletter_form_view", { location: "updates_section" });
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.35 },
+    );
+
+    observer.observe(form);
+
+    return () => observer.disconnect();
   }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -76,7 +97,7 @@ export function NewsletterSignupForm() {
   }
 
   return (
-    <form className="mt-8 max-w-2xl" onSubmit={handleSubmit}>
+    <form className="mt-8 max-w-2xl" onSubmit={handleSubmit} ref={formRef}>
       <div className="flex flex-col gap-3 sm:flex-row">
         <label className="sr-only" htmlFor="newsletter-email">
           Email address

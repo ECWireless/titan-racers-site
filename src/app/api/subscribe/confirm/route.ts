@@ -55,6 +55,13 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
+      if (response.status >= 500) {
+        return jsonResponse(
+          { error: "Confirmation is temporarily unavailable." },
+          { status: 502 },
+        );
+      }
+
       return jsonResponse(
         { error: "Confirmation link expired." },
         { status: 400 },

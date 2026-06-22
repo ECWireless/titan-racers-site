@@ -16,12 +16,18 @@ export default async function ConfirmSubscribePage({
   const { result, token } = await searchParams;
   const confirmed = result === "success";
   const failed = result === "error";
-  const isChecking = !confirmed && !failed && Boolean(token);
+  const unavailable = result === "unavailable";
+  const isChecking = !confirmed && !failed && !unavailable && Boolean(token);
 
   return (
     <main className="min-h-screen bg-titan-black px-5 py-20 text-titan-ice sm:px-8 lg:px-12">
       {confirmed ? <TrackOnMount eventName="confirmation_success" /> : null}
-      {failed ? <TrackOnMount eventName="confirmation_error" /> : null}
+      {failed || unavailable ? (
+        <TrackOnMount
+          eventName="confirmation_error"
+          properties={{ reason: unavailable ? "unavailable" : "expired" }}
+        />
+      ) : null}
       {isChecking && token ? <AutoConfirmSubscription token={token} /> : null}
       <section className="mx-auto flex min-h-[72vh] max-w-3xl flex-col justify-center">
         <p className="font-mono text-sm uppercase tracking-[0.24em] text-titan-orange">
@@ -32,6 +38,8 @@ export default async function ConfirmSubscribePage({
             ? "You are on the signal."
             : failed
               ? "Confirmation link expired."
+              : unavailable
+                ? "Signal temporarily unavailable."
               : isChecking
                 ? "Confirming your signal."
                 : "Check your inbox."}
@@ -41,6 +49,8 @@ export default async function ConfirmSubscribePage({
             ? "You are confirmed for Titan Racers demo drops, build notes, and early racer updates."
             : failed
               ? "This confirmation link is invalid or no longer active. You can request a fresh one from the Titan Racers site."
+              : unavailable
+                ? "The confirmation system is temporarily offline. Keep the email link and try again in a few minutes."
               : isChecking
                 ? "One moment while we confirm your Titan Racers updates."
                 : "Use the confirmation link in your email to finish joining Titan Racers updates."}

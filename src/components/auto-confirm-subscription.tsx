@@ -26,11 +26,17 @@ export function AutoConfirmSubscription({ token }: AutoConfirmSubscriptionProps)
           method: "POST",
         });
 
+        const result = response.ok
+          ? "success"
+          : response.status >= 500
+            ? "unavailable"
+            : "error";
+
         window.location.replace(
-          `/subscribe/confirm?result=${response.ok ? "success" : "error"}`,
+          `/subscribe/confirm?result=${result}`,
         );
       } catch {
-        window.location.replace("/subscribe/confirm?result=error");
+        window.location.replace("/subscribe/confirm?result=unavailable");
       }
     }
 
