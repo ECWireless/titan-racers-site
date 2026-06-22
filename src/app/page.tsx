@@ -131,7 +131,7 @@ function Hero() {
             />
           </Link>
           <a
-            className="hidden font-mono text-xs uppercase tracking-[0.18em] text-titan-ice/66 transition hover:text-titan-ice sm:block"
+            className="max-w-36 text-right font-mono text-[0.63rem] uppercase leading-4 tracking-[0.16em] text-titan-ice/66 transition hover:text-titan-ice sm:max-w-none sm:text-xs sm:tracking-[0.18em]"
             href="https://forge.raidguild.org"
             rel="noreferrer"
             target="_blank"

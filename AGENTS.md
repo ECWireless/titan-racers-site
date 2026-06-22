@@ -19,7 +19,7 @@ Titan Racers is a creator-first sci-fi RC kart racing game set inside humanity's
 Primary homepage promise:
 
 ```text
-Build the kart. Race the habitat. Earn the surface.
+Build the kart. Race the habitat. Earn your place.
 ```
 
 Supporting line:
