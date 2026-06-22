@@ -58,9 +58,9 @@ export default async function ConfirmSubscribePage({
         <div className="mt-10">
           <Link
             className="inline-flex min-h-12 items-center justify-center border border-titan-orange bg-titan-orange px-6 font-mono text-sm font-bold uppercase tracking-[0.16em] text-titan-black transition hover:bg-titan-hazard"
-            href="/#updates"
+            href="/"
           >
-            Return to Updates
+            Return Home
           </Link>
         </div>
       </section>
