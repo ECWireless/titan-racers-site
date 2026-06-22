@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
 const allowedAnalyticsEvents = new Set([
   "hero_cta_click",
@@ -10,6 +11,12 @@ const allowedAnalyticsEvents = new Set([
   "confirmation_error",
   "roadmap_section_view",
 ]);
+
+const analyticsSourceFiles = [
+  "src/app/page.tsx",
+  "src/app/subscribe/confirm/page.tsx",
+  "src/components/newsletter-signup-form.tsx",
+];
 
 function collectAnalyticsEvents(page: Page) {
   const events: unknown[] = [];
@@ -43,7 +50,35 @@ function flatten(value: unknown): unknown[] {
   return [value];
 }
 
+async function extractAnalyticsEventNamesFromSource() {
+  const eventNames = new Set<string>();
+
+  for (const file of analyticsSourceFiles) {
+    const source = await readFile(file, "utf8");
+
+    for (const match of source.matchAll(/\btrack\(\s*["']([^"']+)["']/g)) {
+      eventNames.add(match[1]);
+    }
+
+    for (const match of source.matchAll(/\beventName=["']([^"']+)["']/g)) {
+      eventNames.add(match[1]);
+    }
+  }
+
+  return [...eventNames].sort();
+}
+
 test.describe("launch smoke", () => {
+  test("uses only approved custom analytics event names", async () => {
+    const eventNames = await extractAnalyticsEventNamesFromSource();
+    const unknownEventNames = eventNames.filter(
+      (eventName) => !allowedAnalyticsEvents.has(eventName),
+    );
+
+    expect(unknownEventNames).toEqual([]);
+    expect(eventNames).toEqual(expect.arrayContaining([...allowedAnalyticsEvents]));
+  });
+
   test("renders the homepage and submits the newsletter form without leaking email to analytics", async ({
     page,
   }) => {
@@ -82,14 +117,6 @@ test.describe("launch smoke", () => {
       const values = flatten(event);
 
       expect(values).not.toContain("pilot@example.com");
-
-      const eventName = values.find(
-        (value) => typeof value === "string" && allowedAnalyticsEvents.has(value),
-      );
-
-      if (typeof eventName === "string") {
-        expect(allowedAnalyticsEvents.has(eventName)).toBe(true);
-      }
     }
   });
 
