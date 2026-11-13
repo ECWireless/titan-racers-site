@@ -10,10 +10,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1,
       images: [
-        `${siteUrl}/images/titan-racers-training-bay.png`,
-        `${siteUrl}/images/titan-racers-kart-workbench.png`,
-        `${siteUrl}/images/titan-racers-habitat.png`,
-        `${siteUrl}/images/titan-racers-catalogue.png`,
+        `${siteUrl}/images/falls-view-park-habitat.webp`,
+        `${siteUrl}/images/kart-editor.webp`,
+        `${siteUrl}/images/island-three.webp`,
+        `${siteUrl}/images/official-karts.webp`,
       ],
     },
   ];

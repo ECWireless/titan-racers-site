@@ -1,54 +1,14 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { readFile } from "node:fs/promises";
 
+const demoUrl = "https://play.titanracers.com";
+
 const allowedAnalyticsEvents = new Set([
-  "hero_cta_click",
-  "newsletter_form_view",
-  "newsletter_submit",
-  "newsletter_success",
-  "newsletter_error",
-  "confirmation_success",
-  "confirmation_error",
+  "play_demo_click",
   "roadmap_section_view",
 ]);
 
-const analyticsSourceFiles = [
-  "src/app/page.tsx",
-  "src/app/subscribe/confirm/page.tsx",
-  "src/components/newsletter-signup-form.tsx",
-];
-
-function collectAnalyticsEvents(page: Page) {
-  const events: unknown[] = [];
-
-  page.on("request", (request) => {
-    const url = request.url();
-
-    if (!url.includes("/_vercel/insights")) {
-      return;
-    }
-
-    const payload = request.postDataJSON();
-
-    if (payload) {
-      events.push(payload);
-    }
-  });
-
-  return events;
-}
-
-function flatten(value: unknown): unknown[] {
-  if (Array.isArray(value)) {
-    return value.flatMap((item) => flatten(item));
-  }
-
-  if (value && typeof value === "object") {
-    return Object.values(value).flatMap((item) => flatten(item));
-  }
-
-  return [value];
-}
+const analyticsSourceFiles = ["src/app/page.tsx"];
 
 async function extractAnalyticsEventNamesFromSource() {
   const eventNames = new Set<string>();
@@ -76,25 +36,18 @@ test.describe("launch smoke", () => {
     );
 
     expect(unknownEventNames).toEqual([]);
-    expect(eventNames).toEqual(expect.arrayContaining([...allowedAnalyticsEvents]));
+    expect(eventNames).toEqual(
+      expect.arrayContaining([...allowedAnalyticsEvents]),
+    );
   });
 
-  test("renders the homepage and submits the newsletter form without leaking email to analytics", async ({
+  test("renders the homepage and sends players to the demo", async ({
     page,
   }) => {
-    const analyticsEvents = collectAnalyticsEvents(page);
-    const submitRequests: unknown[] = [];
-
-    await page.route("**/api/subscribe", async (route) => {
-      const request = route.request();
-      submitRequests.push(request.postDataJSON());
-
-      await route.fulfill({
-        contentType: "application/json",
-        body: JSON.stringify({ ok: true, message: "Confirmation email sent." }),
-      });
-    });
-
+    // The demo itself isn't part of this site's check.
+    await page.route(`${demoUrl}/**`, (route) =>
+      route.fulfill({ body: "<title>Demo</title>", contentType: "text/html" }),
+    );
     await page.goto("/");
 
     await expect(
@@ -102,42 +55,28 @@ test.describe("launch smoke", () => {
     ).toBeVisible();
     await expect(page.getByText("Race the habitat.")).toBeVisible();
     await expect(page.getByText("Earn your place.")).toBeVisible();
-    await expect(page.getByText("A RaidGuild Forge project")).toBeVisible();
+    await expect(page.getByText("The first demo is out")).toBeVisible();
+    await expect(page.getByText("Out now")).toBeAttached();
+    await expect(page.getByText(/RaidGuild|Forge/)).toHaveCount(0);
+    expect(await page.content()).not.toMatch(/RaidGuild|forge\.raidguild/i);
 
-    await page.getByRole("link", { name: /Get Demo Updates/i }).click();
-    await expect(page.locator("#updates")).toBeInViewport();
-
-    await page.getByLabel("Email address").fill("pilot@example.com");
-    await page.getByRole("button", { name: /Get Demo Updates/i }).click();
-    await expect(page.getByText(/Check your inbox/i)).toBeVisible();
-
-    expect(submitRequests).toEqual([{ email: "pilot@example.com" }]);
-
-    for (const event of analyticsEvents) {
-      const values = flatten(event);
-
-      expect(values).not.toContain("pilot@example.com");
+    const playLinks = page.getByRole("link", { name: "Play the demo" });
+    await expect(playLinks).toHaveCount(2);
+    for (const link of await playLinks.all()) {
+      await expect(link).toHaveAttribute("href", demoUrl);
     }
+
+    await playLinks.first().click();
+    await expect(page).toHaveURL(new RegExp(`^${demoUrl}`));
   });
 
-  test("renders confirmation result states with home CTA", async ({ page }) => {
+  test("sends old signup confirmation links home", async ({ page }) => {
     await page.goto("/subscribe/confirm?result=success");
+    await expect
+      .poll(() => new URL(page.url()).pathname)
+      .toBe("/");
     await expect(
-      page.getByRole("heading", { name: /You are on the signal/i }),
-    ).toBeVisible();
-    await expect(page.getByRole("link", { name: /Return Home/i })).toHaveAttribute(
-      "href",
-      "/",
-    );
-
-    await page.goto("/subscribe/confirm?result=error");
-    await expect(
-      page.getByRole("heading", { name: /Confirmation link expired/i }),
-    ).toBeVisible();
-
-    await page.goto("/subscribe/confirm?result=unavailable");
-    await expect(
-      page.getByRole("heading", { name: /Signal temporarily unavailable/i }),
+      page.getByRole("heading", { name: /Build the kart\./i }),
     ).toBeVisible();
   });
 

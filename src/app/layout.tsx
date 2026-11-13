@@ -18,17 +18,14 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
-  authors: [{ name: "RaidGuild Forge", url: "https://forge.raidguild.org" }],
   category: "video game",
-  creator: "RaidGuild Forge",
   keywords: [
     "Titan Racers",
     "sci-fi racing game",
     "RC kart racing game",
     "kart builder game",
-    "RaidGuild Forge",
+    "browser racing game",
   ],
-  publisher: "RaidGuild Forge",
   robots: {
     index: true,
     follow: true,

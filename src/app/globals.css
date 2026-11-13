@@ -110,7 +110,6 @@ img {
     transform 720ms cubic-bezier(0.2, 0.82, 0.2, 1);
 }
 
-.lift-card,
 .lift-row,
 .media-frame {
   transition:
@@ -119,7 +118,6 @@ img {
     transform 220ms ease;
 }
 
-.lift-card:hover,
 .lift-row:hover {
   border-color: color-mix(in srgb, var(--titan-orange) 38%, transparent);
   transform: translateY(-3px);
@@ -205,7 +203,6 @@ img {
 
   .hero-drift,
   .media-drift,
-  .lift-card:hover,
   .lift-row:hover,
   .media-frame:hover,
   .roadmap-node:hover {

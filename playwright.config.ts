@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Set PORT when 3000 is taken on this machine.
+const port = Number(process.env.PORT ?? 3000);
+const baseURL = `http://localhost:${port}`;
+
 export default defineConfig({
   testDir: "./tests",
   timeout: 30_000,
@@ -7,13 +11,13 @@ export default defineConfig({
     timeout: 5_000,
   },
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     trace: "on-first-retry",
   },
   webServer: {
-    command: "pnpm dev",
+    command: `pnpm dev --port ${port}`,
     reuseExistingServer: !process.env.CI,
-    url: "http://localhost:3000",
+    url: baseURL,
   },
   projects: [
     {
