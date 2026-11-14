@@ -110,7 +110,7 @@ function Hero() {
       <Image
         priority
         src="/images/falls-view-park-habitat.webp"
-        alt="Falls View Park at dusk, seen from above: a floodlit kart track in the foreground, with the habitat's latticed walls curving up on both sides toward a bright window overhead."
+        alt="Falls View Park at dusk, seen from above: a floodlit kart track among the park's trees in the foreground, with the habitat's latticed walls curving up on both sides toward a bright window overhead."
         fill
         sizes="100vw"
         className="hero-drift object-cover object-[64%_50%]"
