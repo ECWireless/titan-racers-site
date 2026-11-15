@@ -16,5 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
         `${siteUrl}/images/official-karts.webp`,
       ],
     },
+    {
+      url: `${siteUrl}/privacy`,
+      changeFrequency: "yearly",
+      priority: 0.2,
+    },
   ];
 }

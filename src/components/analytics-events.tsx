@@ -70,3 +70,24 @@ export function TrackSectionView({
 
   return <span ref={markerRef} aria-hidden="true" className="sr-only" />;
 }
+
+export function TrackOnMount({
+  eventName,
+  properties,
+}: {
+  eventName: string;
+  properties?: EventProperties;
+}) {
+  const hasTrackedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedRef.current) {
+      return;
+    }
+
+    hasTrackedRef.current = true;
+    track(eventName, properties);
+  }, [eventName, properties]);
+
+  return null;
+}

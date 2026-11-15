@@ -6,9 +6,21 @@ const demoUrl = "https://play.titanracers.com";
 const allowedAnalyticsEvents = new Set([
   "play_demo_click",
   "roadmap_section_view",
+  "updates_cta_click",
+  "updates_form_view",
+  "updates_signup_submit",
+  "updates_signup",
+  "updates_signup_error",
+  "updates_confirm",
 ]);
 
-const analyticsSourceFiles = ["src/app/page.tsx"];
+const analyticsSourceFiles = [
+  "src/app/page.tsx",
+  "src/components/updates-signup-form.tsx",
+  "src/app/updates/confirm/page.tsx",
+];
+
+const updatesSourceFiles = ["src/components/updates-signup-form.tsx"];
 
 async function extractAnalyticsEventNamesFromSource() {
   const eventNames = new Set<string>();
@@ -68,6 +80,148 @@ test.describe("launch smoke", () => {
 
     await playLinks.first().click();
     await expect(page).toHaveURL(new RegExp(`^${demoUrl}`));
+  });
+
+  test("offers updates from the hero and the closing section", async ({
+    page,
+  }) => {
+    await page.goto("/");
+
+    await expect(page.getByText("Enter the Habitat")).toHaveCount(0);
+    const heroLink = page.getByRole("link", { name: "Get updates" });
+    await expect(heroLink).toHaveAttribute("href", "#updates");
+
+    await heroLink.click();
+    const email = page.getByLabel("Email address");
+    await expect(email).toBeInViewport();
+    await expect(email).toHaveAttribute("type", "email");
+    await expect(page.getByRole("button", { name: "Get updates" })).toBeVisible();
+    // The bot trap stays out of sight and out of the tab order.
+    await expect(page.locator('input[name="website"]')).not.toBeInViewport();
+    await expect(page.locator('input[name="website"]')).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
+    await expect(page.getByRole("link", { name: "Privacy" })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+  });
+
+  test("ignores bots and keeps addresses out of URLs and analytics", async ({
+    page,
+  }) => {
+    // With Vercel's script blocked, tracked events wait in window.vaq, where
+    // the test can read exactly what would be sent.
+    await page.route("https://va.vercel-scripts.com/**", (route) =>
+      route.fulfill({ body: "", contentType: "text/javascript" }),
+    );
+    const queuedEvents = () =>
+      page.evaluate(() =>
+        JSON.stringify((window as { vaq?: unknown[] }).vaq ?? []),
+      );
+
+    await page.goto("/");
+    // The honeypot answers before touching the database.
+    await page
+      .locator('input[name="website"]')
+      .evaluate((input: HTMLInputElement) => {
+        input.value = "https://spam.example";
+      });
+    await page.getByLabel("Email address").fill("bot@example.com");
+    await page.getByRole("button", { name: "Get updates" }).click();
+    await expect(
+      page.getByText("Check your inbox and confirm your email to finish."),
+    ).toBeVisible();
+    expect(page.url()).not.toContain("example.com");
+
+    await expect.poll(queuedEvents).toContain('"updates_signup"');
+    const events = await queuedEvents();
+    expect(events).toContain('"updates_signup_submit"');
+    expect(events).not.toContain("bot@example.com");
+
+    for (const file of updatesSourceFiles) {
+      expect(await readFile(file, "utf8")).not.toMatch(/track\([^)]*email/);
+    }
+  });
+
+  test("posts the form without JavaScript", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    const methods: string[] = [];
+    page.on("request", (request) => {
+      if (request.isNavigationRequest()) methods.push(request.method());
+    });
+
+    await page.goto("/");
+    await page
+      .locator('input[name="website"]')
+      .evaluate((input: HTMLInputElement) => {
+        input.value = "https://spam.example";
+      })
+      .catch(() => {});
+    await page.getByLabel("Email address").fill("nojs@example.com");
+    await page.getByRole("button", { name: "Get updates" }).click();
+    await page.waitForLoadState();
+
+    expect(methods).toContain("POST");
+    expect(page.url()).not.toContain("example.com");
+    await context.close();
+  });
+
+  test("never confirms or unsubscribes on a link load alone", async ({
+    page,
+  }) => {
+    const posts: string[] = [];
+    page.on("request", (request) => {
+      if (request.method() === "POST") posts.push(request.url());
+    });
+
+    await page.goto("/updates/confirm?token=example");
+    await expect(
+      page.getByRole("heading", { name: "Confirm your email." }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Confirm" })).toBeVisible();
+
+    await page.goto("/updates/unsubscribe?token=example");
+    await expect(page.getByRole("button", { name: "Unsubscribe" })).toBeVisible();
+
+    await page.waitForTimeout(1000);
+    expect(posts).toEqual([]);
+  });
+
+  test("shows the confirm, unsubscribe, and privacy pages", async ({ page }) => {
+    await page.goto("/updates/confirm?result=constructor");
+    await expect(
+      page.getByRole("heading", { name: "Check your inbox." }),
+    ).toBeVisible();
+
+    await page.goto("/updates/confirm?result=success");
+    await expect(
+      page.getByRole("heading", { name: "You're on the list." }),
+    ).toBeVisible();
+
+    await page.goto("/updates/confirm?result=expired");
+    await expect(
+      page.getByRole("heading", { name: "This link has expired." }),
+    ).toBeVisible();
+
+    await page.goto("/updates/unsubscribe?token=example");
+    await expect(
+      page.getByRole("heading", { name: "Stop Titan Racers emails?" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Unsubscribe" })).toBeVisible();
+
+    await page.goto("/updates/unsubscribe?result=success");
+    await expect(
+      page.getByRole("heading", { name: "You're unsubscribed." }),
+    ).toBeVisible();
+
+    await page.goto("/privacy");
+    await expect(
+      page.getByRole("heading", { name: "Your email, and nothing else." }),
+    ).toBeVisible();
+    await expect(page.getByText(/elliott@coopallc\.com/)).toBeVisible();
   });
 
   test("sends old signup confirmation links home", async ({ page }) => {
