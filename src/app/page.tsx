@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { TrackClick, TrackSectionView } from "@/components/analytics-events";
 import { RevealOnScroll } from "@/components/reveal-on-scroll";
+import { UpdatesSignupForm } from "@/components/updates-signup-form";
 
 const demoUrl = "https://play.titanracers.com";
 
@@ -79,6 +80,8 @@ const EYEBROW =
 const HEADLINE =
   "font-bold uppercase leading-[0.95] tracking-[-0.01em] text-balance";
 const SECTION = "border-t border-titan-ice/12 px-5 py-20 sm:px-8 lg:px-12 lg:py-28";
+const OUTLINE_BUTTON =
+  "inline-flex min-h-12 items-center justify-center border border-titan-ice/50 px-6 font-mono text-sm uppercase tracking-[0.16em] text-titan-ice transition hover:border-titan-hazard hover:text-titan-hazard focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-titan-hazard";
 const PLAY_BUTTON =
   "inline-flex min-h-12 items-center justify-center border border-titan-orange bg-titan-orange px-6 font-mono text-sm font-bold uppercase tracking-[0.16em] text-titan-black transition hover:border-titan-hazard hover:bg-titan-hazard focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-titan-hazard";
 
@@ -168,12 +171,14 @@ function Hero() {
               >
                 Play the demo
               </TrackClick>
-              <a
-                className="inline-flex min-h-12 items-center justify-center border border-titan-ice/50 px-6 font-mono text-sm uppercase tracking-[0.16em] text-titan-ice transition hover:border-titan-hazard hover:text-titan-hazard focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-titan-hazard"
-                href="#world"
+              <TrackClick
+                className={OUTLINE_BUTTON}
+                eventName="updates_cta_click"
+                href="#updates"
+                properties={{ location: "hero" }}
               >
-                Enter the Habitat
-              </a>
+                Get updates
+              </TrackClick>
             </div>
           </div>
         </div>
@@ -458,6 +463,21 @@ function PlayDemo() {
           >
             Play the demo
           </TrackClick>
+        </div>
+
+        <div
+          id="updates"
+          className="mt-16 scroll-mt-8 border-t border-titan-ice/12 pt-12 lg:mt-20"
+        >
+          <TrackSectionView
+            eventName="updates_form_view"
+            properties={{ location: "closing" }}
+          />
+          <p className={EYEBROW}>Get updates</p>
+          <p className="mt-4 max-w-2xl text-lg leading-8 text-titan-ice/72">
+            We&apos;ll email you when something new is ready to race.
+          </p>
+          <UpdatesSignupForm />
         </div>
       </div>
     </section>

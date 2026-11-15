@@ -90,7 +90,22 @@ The site's call to action is a link to the demo at `https://play.titanracers.com
 Play the demo
 ```
 
-It appears in the hero and in a closing section. The site collects no email addresses or other personal details. Links from the retired newsletter's confirmation emails (`/subscribe/*`) redirect to the home page.
+It appears in the hero and in a closing section. Links from the RaidGuild Forge newsletter's old confirmation emails (`/subscribe/*`) redirect to the home page.
+
+## Updates List
+
+The site keeps its own email list for Titan Racers news. Beside Play the demo, the hero has an outlined `Get updates` button that jumps to the signup form below the closing Play the demo; Play the demo stays the one solid orange button.
+
+- Collect only an email address. Double opt-in: an address joins once its confirmation link is used.
+- The list lives in Postgres (`DATABASE_URL`; Neon in production) and is changed through `migrations/`, applied by `pnpm db:migrate` on production deploys.
+- SendGrid sends as `no-reply@coopallc.com`. Each signup also emails `ADMIN_NOTIFY_EMAIL` when set.
+- Only hashes of confirmation and unsubscribe tokens are stored, hashed the same way as the RaidGuild Forge list's, so links from imported subscribers' emails keep working.
+- Confirm and unsubscribe each take a button press, never a link load, because email scanners open links (some in full browsers).
+- The form never reveals whether an address is already on the list: emails go out after the response, so its answer and timing don't depend on it.
+- Abuse limits: a hidden honeypot field, one confirmation email per address every 10 minutes, and 10 attempts per IP an hour (counted against a keyed hash, `IP_HASH_SECRET`). Each check-and-claim is a single SQL statement, so concurrent requests can't slip past.
+- Page views strip `token` from URLs before they reach Vercel Analytics.
+- `/privacy` describes what is collected; its contact is `elliott@coopallc.com`. Keep it in step with any change to what is collected or who handles it.
+- Logs carry an error's name and code only, never an email address.
 
 ## Analytics
 
@@ -100,6 +115,14 @@ Approved custom events:
 
 - `play_demo_click`, with `location` (`hero` or `closing`)
 - `roadmap_section_view`
+- `updates_cta_click`, with `location` (`hero`)
+- `updates_form_view`, with `location` (`closing`), when the signup form scrolls into view
+- `updates_signup_submit`, with `location`, when the form is sent
+- `updates_signup`, with `location`, when the signup is accepted
+- `updates_signup_error`, with `location` and `reason` (`invalid`, `rate_limited`, or `unavailable`)
+- `updates_confirm`, with `result` (`success`, `expired`, or `unavailable`)
+
+Together with page views, these give the funnels from visit to Play the demo and from visit to confirmed signup.
 
 Do not add `external_link_click` unless explicitly requested later.
 
